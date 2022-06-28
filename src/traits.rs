@@ -1,38 +1,88 @@
 //! geo traits implementation
 
+#![allow(clippy::type_complexity)]
+
 pub trait Point: Send + Sync {
+    /// x component of this point
     fn x(&self) -> f64;
+
+    /// y component of this point
     fn y(&self) -> f64;
 }
 
 pub trait LineString<'a>: Send + Sync {
     type ItemType: 'a + Point;
     type Iter: Iterator<Item = &'a Self::ItemType>;
+
+    /// An iterator over the points in this LineString
     fn points(&'a self) -> Self::Iter;
+
+    /// The number of points in this LineString
+    fn num_points(&'a self) -> usize;
+
+    /// Access to a specified point in this LineString
+    /// Will return None if the provided index is out of bounds
+    fn point(&'a self, i: usize) -> Option<Self::ItemType>;
 }
 
 pub trait Polygon<'a>: Send + Sync {
     type ItemType: 'a + LineString<'a>;
     type Iter: Iterator<Item = &'a Self::ItemType>;
+
+    /// An iterator over the rings in this Polygon
     fn rings(&'a self) -> Self::Iter;
+
+    /// The number of rings in this Polygon
+    fn num_rings(&'a self) -> usize;
+
+    /// Access to a specified point in this Polygon
+    /// Will return None if the provided index is out of bounds
+    fn ring(&'a self, i: usize) -> Option<Self::ItemType>;
 }
 
 pub trait MultiPoint<'a>: Send + Sync {
     type ItemType: 'a + Point;
     type Iter: Iterator<Item = &'a Self::ItemType>;
+
+    /// An iterator over the points in this MultiPoint
     fn points(&'a self) -> Self::Iter;
+
+    /// The number of rings in this MultiPoint
+    fn num_points(&'a self) -> usize;
+
+    /// Access to a specified point in this MultiPoint
+    /// Will return None if the provided index is out of bounds
+    fn point(&'a self, i: usize) -> Option<Self::ItemType>;
 }
 
 pub trait MultiLineString<'a>: Send + Sync {
     type ItemType: 'a + LineString<'a>;
     type Iter: Iterator<Item = &'a Self::ItemType>;
+
+    /// An iterator over the LineStrings in this MultiLineString
     fn lines(&'a self) -> Self::Iter;
+
+    /// The number of lines in this MultiLineString
+    fn num_lines(&'a self) -> usize;
+
+    /// Access to a specified line in this MultiLineString
+    /// Will return None if the provided index is out of bounds
+    fn line(&'a self, i: usize) -> Option<Self::ItemType>;
 }
 
 pub trait MultiPolygon<'a>: Send + Sync {
     type ItemType: 'a + Polygon<'a>;
     type Iter: Iterator<Item = &'a Self::ItemType>;
+
+    /// An iterator over the Polygons in this MultiPolygon
     fn polygons(&'a self) -> Self::Iter;
+
+    /// The number of polygons in this MultiPolygon
+    fn num_polygons(&'a self) -> usize;
+
+    /// Access to a specified polygon in this MultiPolygon
+    /// Will return None if the provided index is out of bounds
+    fn polygon(&'a self, i: usize) -> Option<Self::ItemType>;
 }
 
 pub trait Geometry<'a>: Send + Sync {
