@@ -2,6 +2,7 @@
 
 #![allow(clippy::type_complexity)]
 
+// TODO: make this generic over CoordNum/CoordFloat
 pub trait Point: Send + Sync {
     /// x component of this point
     fn x(&self) -> f64;
@@ -28,6 +29,9 @@ pub trait LineString<'a>: Send + Sync {
 pub trait Polygon<'a>: Send + Sync {
     type ItemType: 'a + LineString<'a>;
     type Iter: Iterator<Item = &'a Self::ItemType>;
+
+    // TODO: should rings be split into outer_ring and inner_rings?
+    // https://github.com/georust/geo/pull/85#discussion_r96141112
 
     /// An iterator over the rings in this Polygon
     fn rings(&'a self) -> Self::Iter;
