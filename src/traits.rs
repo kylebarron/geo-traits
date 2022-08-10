@@ -2,17 +2,27 @@
 
 #![allow(clippy::type_complexity)]
 
+use geo_types::CoordNum;
+
 // TODO: make this generic over CoordNum/CoordFloat
-pub trait Point: Send + Sync {
+pub trait Point<T>
+where
+    T: CoordNum + Send + Sync,
+{
     /// x component of this point
-    fn x(&self) -> f64;
+    fn x(&self) -> T;
 
     /// y component of this point
-    fn y(&self) -> f64;
+    fn y(&self) -> T;
+
+    fn from_xy(x: T, y: T) -> Self;
 }
 
-pub trait LineString<'a>: Send + Sync {
-    type ItemType: 'a + Point;
+pub trait LineString<'a, T>
+where
+    T: CoordNum + Send + Sync,
+{
+    type ItemType: 'a + Point<T>;
     type Iter: Iterator<Item = &'a Self::ItemType>;
 
     /// An iterator over the points in this LineString
@@ -26,8 +36,11 @@ pub trait LineString<'a>: Send + Sync {
     fn point(&'a self, i: usize) -> Option<Self::ItemType>;
 }
 
-pub trait Polygon<'a>: Send + Sync {
-    type ItemType: 'a + LineString<'a>;
+pub trait Polygon<'a, T>
+where
+    T: CoordNum + Send + Sync,
+{
+    type ItemType: 'a + LineString<'a, T>;
     type Iter: Iterator<Item = &'a Self::ItemType>;
 
     // TODO: should rings be split into outer_ring and inner_rings?
@@ -44,8 +57,11 @@ pub trait Polygon<'a>: Send + Sync {
     fn ring(&'a self, i: usize) -> Option<Self::ItemType>;
 }
 
-pub trait MultiPoint<'a>: Send + Sync {
-    type ItemType: 'a + Point;
+pub trait MultiPoint<'a, T>
+where
+    T: CoordNum + Send + Sync,
+{
+    type ItemType: 'a + Point<T>;
     type Iter: Iterator<Item = &'a Self::ItemType>;
 
     /// An iterator over the points in this MultiPoint
@@ -59,8 +75,11 @@ pub trait MultiPoint<'a>: Send + Sync {
     fn point(&'a self, i: usize) -> Option<Self::ItemType>;
 }
 
-pub trait MultiLineString<'a>: Send + Sync {
-    type ItemType: 'a + LineString<'a>;
+pub trait MultiLineString<'a, T>
+where
+    T: CoordNum + Send + Sync,
+{
+    type ItemType: 'a + LineString<'a, T>;
     type Iter: Iterator<Item = &'a Self::ItemType>;
 
     /// An iterator over the LineStrings in this MultiLineString
@@ -74,8 +93,11 @@ pub trait MultiLineString<'a>: Send + Sync {
     fn line(&'a self, i: usize) -> Option<Self::ItemType>;
 }
 
-pub trait MultiPolygon<'a>: Send + Sync {
-    type ItemType: 'a + Polygon<'a>;
+pub trait MultiPolygon<'a, T>
+where
+    T: CoordNum + Send + Sync,
+{
+    type ItemType: 'a + Polygon<'a, T>;
     type Iter: Iterator<Item = &'a Self::ItemType>;
 
     /// An iterator over the Polygons in this MultiPolygon
@@ -89,18 +111,22 @@ pub trait MultiPolygon<'a>: Send + Sync {
     fn polygon(&'a self, i: usize) -> Option<Self::ItemType>;
 }
 
-pub trait Geometry<'a>: Send + Sync {
-    type Point: 'a + Point;
-    type LineString: 'a + LineString<'a>;
-    type Polygon: 'a + Polygon<'a>;
-    type MultiPoint: 'a + MultiPoint<'a>;
-    type MultiLineString: 'a + MultiLineString<'a>;
-    type MultiPolygon: 'a + MultiPolygon<'a>;
+pub trait Geometry<'a, T>
+where
+    T: CoordNum + Send + Sync,
+{
+    type Point: 'a + Point<T>;
+    type LineString: 'a + LineString<'a, T>;
+    type Polygon: 'a + Polygon<'a, T>;
+    type MultiPoint: 'a + MultiPoint<'a, T>;
+    type MultiLineString: 'a + MultiLineString<'a, T>;
+    type MultiPolygon: 'a + MultiPolygon<'a, T>;
     type GeometryCollection: 'a + GeometryCollection<'a>;
     fn as_type(
         &'a self,
     ) -> GeometryType<
         'a,
+        T,
         Self::Point,
         Self::LineString,
         Self::Polygon,
@@ -111,14 +137,15 @@ pub trait Geometry<'a>: Send + Sync {
     >;
 }
 
-pub enum GeometryType<'a, P, L, Y, MP, ML, MY, GC>
+pub enum GeometryType<'a, T, P, L, Y, MP, ML, MY, GC>
 where
-    P: 'a + Point,
-    L: 'a + LineString<'a>,
-    Y: 'a + Polygon<'a>,
-    MP: 'a + MultiPoint<'a>,
-    ML: 'a + MultiLineString<'a>,
-    MY: 'a + MultiPolygon<'a>,
+    T: CoordNum + Send + Sync,
+    P: 'a + Point<T>,
+    L: 'a + LineString<'a, T>,
+    Y: 'a + Polygon<'a, T>,
+    MP: 'a + MultiPoint<'a, T>,
+    ML: 'a + MultiLineString<'a, T>,
+    MY: 'a + MultiPolygon<'a, T>,
     GC: 'a + GeometryCollection<'a>,
 {
     Point(&'a P),
@@ -135,3 +162,8 @@ pub trait GeometryCollection<'a> {
     type Iter: Iterator<Item = &'a Self::ItemType>;
     fn geometries(&'a self) -> Self::Iter;
 }
+
+// pub trait PointFactory {
+//     // TODO: how to
+//     fn from_xy(x: f64, y: f64) -> Box<dyn Point<f64>>;
+// }

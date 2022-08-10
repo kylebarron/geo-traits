@@ -38,6 +38,10 @@ Should it be a requirement that any implementor implement _all_ traits? I think 
 
 This would also allow a mix and match of `geo`'s structs and another zero-copy format. For example, if `geo`'s structs implemented geo factory traits, then a `geo` `Line` struct could be constructed seamlessly from three points in GeoArrow memory. An algorithm that takes in a `LineString` and a `Line` and returns a `LineString` could then be done with mostly GeoArrow memory, only using the `geo` struct for the intermediate `Line` representation.
 
+### Coordinate + Point traits?
+
+Probably yes: https://github.com/georust/geo/issues/15#issuecomment-283010756
+
 ## Prior work
 
 - [Original `geo-types` issue from 2016](https://github.com/georust/geo/issues/67).
